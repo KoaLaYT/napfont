@@ -12,13 +12,15 @@ const BakedFont = struct {
     num_chars: u8,
     cdata: []c.stbtt_bakedchar,
 
-    fn create(alloc: std.mem.Allocator, width: usize, height: usize) !BakedFont {
-        const ttf = try std.fs.cwd().openFile("assets/Roboto-Regular.ttf", .{ .mode = .read_only });
+    fn create(alloc: std.mem.Allocator, font_path: []const u8) !BakedFont {
+        const ttf = try std.fs.cwd().openFile(font_path, .{ .mode = .read_only });
         defer ttf.close();
 
         const data = try ttf.readToEndAlloc(alloc, std.math.maxInt(usize));
         defer alloc.free(data);
 
+        const width = 512;
+        const height = 512;
         const first_char = 32;
         const num_chars = 95;
 
@@ -33,8 +35,8 @@ const BakedFont = struct {
             0,
             64.0,
             pixels.ptr,
-            @intCast(width),
-            @intCast(height),
+            width,
+            height,
             first_char,
             num_chars,
             cdata.ptr,
@@ -108,7 +110,8 @@ const BakedFont = struct {
 };
 
 test "process" {
-    const font = try BakedFont.create(std.testing.allocator, 512, 512);
+    const font_path = "assets/Roboto-Regular.ttf";
+    const font = try BakedFont.create(std.testing.allocator, font_path);
     defer font.destory(std.testing.allocator);
 
     try font.print_to_ppm(std.testing.allocator, "hello, world!");
